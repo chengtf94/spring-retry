@@ -21,17 +21,17 @@ import org.springframework.retry.RetryContext;
 import org.springframework.retry.RetryPolicy;
 
 /**
+ * 重试上下文辅助类
+ *
  * @author Dave Syer
  */
 @SuppressWarnings("serial")
 public class RetryContextSupport extends AttributeAccessorSupport implements RetryContext {
 
+	/** 父重试上下文、是否终止、重试次数、导致当前重试的异常 */
 	private final RetryContext parent;
-
 	private volatile boolean terminate = false;
-
 	private volatile int count;
-
 	private volatile Throwable lastException;
 
 	public RetryContextSupport(RetryContext parent) {
@@ -39,42 +39,36 @@ public class RetryContextSupport extends AttributeAccessorSupport implements Ret
 		this.parent = parent;
 	}
 
+	@Override
 	public RetryContext getParent() {
 		return this.parent;
 	}
 
-	public boolean isExhaustedOnly() {
-		return terminate;
-	}
-
+	@Override
 	public void setExhaustedOnly() {
 		terminate = true;
 	}
 
+	@Override
+	public boolean isExhaustedOnly() {
+		return terminate;
+	}
+
+	@Override
 	public int getRetryCount() {
 		return count;
 	}
 
-	public Throwable getLastThrowable() {
-		return lastException;
-	}
-
-	/**
-	 * Set the exception for the public interface {@link RetryContext}, and also increment
-	 * the retry count if the throwable is non-null.
-	 *
-	 * All {@link RetryPolicy} implementations should use this method when they register
-	 * the throwable. It should only be called once per retry attempt because it
-	 * increments a counter.
-	 *
-	 * Use of this method is not enforced by the framework - it is a service provider
-	 * contract for authors of policies.
-	 * @param throwable the exception that caused the current retry attempt to fail.
-	 */
+	/** 注册重试后的异常 */
 	public void registerThrowable(Throwable throwable) {
 		this.lastException = throwable;
 		if (throwable != null)
 			count++;
+	}
+
+	@Override
+	public Throwable getLastThrowable() {
+		return lastException;
 	}
 
 	@Override
